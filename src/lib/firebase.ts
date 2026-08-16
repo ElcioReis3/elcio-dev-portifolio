@@ -10,7 +10,7 @@ if (!getApps().length) {
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      "Configure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no .env.local"
+      "Configure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no .env",
     );
   }
 

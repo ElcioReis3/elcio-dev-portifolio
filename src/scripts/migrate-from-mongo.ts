@@ -6,8 +6,8 @@
 import { config } from "dotenv";
 import { resolve } from "path";
 
-// Carrega .env.local ANTES de qualquer import do firebase
-config({ path: resolve(process.cwd(), ".env.local") });
+// Carrega .env ANTES de qualquer import do firebase
+config({ path: resolve(process.cwd(), ".env") });
 
 // Import dinâmico do firebase (só depois que o .env foi carregado)
 async function main() {
@@ -116,7 +116,7 @@ async function main() {
 
   const existing = await projectsCollection.get();
   const existingTitles = new Set(
-    existing.docs.map((doc) => doc.data().title as string)
+    existing.docs.map((doc) => doc.data().title as string),
   );
 
   let created = 0;
