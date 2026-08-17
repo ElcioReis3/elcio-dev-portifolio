@@ -10,9 +10,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
         if (
-          credentials?.email === process.env.EMAIL_USER &&
-          credentials?.password === process.env.PASSWORD_USER
+          credentials.email === process.env.EMAIL_USER &&
+          credentials.password === process.env.PASSWORD_USER
         ) {
           return { id: "1", name: "Élcio Reis", email: credentials.email };
         }
@@ -25,7 +27,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
