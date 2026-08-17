@@ -6,7 +6,7 @@ const services = [
     title: "Sites Institucionais",
     description:
       "Apresente sua marca com um site profissional, moderno e adaptado ao seu público-alvo.",
-    price: "A partir de R$ 497",
+    price: "A partir de R$ 99,90",
     highlight: false,
   },
   {
@@ -14,7 +14,7 @@ const services = [
     title: "Lojas Virtuais",
     description:
       "Venda online com facilidade e segurança. Integração de pagamentos, carrinho e gestão de produtos.",
-    price: "A partir de R$ 897",
+    price: "A partir de R$ 39,90/mês",
     highlight: true,
   },
   {
@@ -41,7 +41,10 @@ const getMsg = (service: string) =>
 
 export function Services() {
   return (
-    <section id="servicos" className="section-padding py-20 lg:py-28 bg-secondary/30">
+    <section
+      id="servicos"
+      className="section-padding py-20 lg:py-28 bg-secondary/30"
+    >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14 space-y-3">
@@ -75,9 +78,7 @@ export function Services() {
 
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    service.highlight
-                      ? "bg-white/20"
-                      : "bg-primary/10"
+                    service.highlight ? "bg-white/20" : "bg-primary/10"
                   }`}
                 >
                   <Icon
@@ -101,7 +102,9 @@ export function Services() {
                 <div className="flex items-center justify-between">
                   <span
                     className={`font-semibold text-sm ${
-                      service.highlight ? "text-primary-foreground" : "text-foreground"
+                      service.highlight
+                        ? "text-primary-foreground"
+                        : "text-foreground"
                     }`}
                   >
                     {service.price}
