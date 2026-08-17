@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 // PUT /api/projects/[id] — atualiza projeto
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -14,15 +14,16 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params;
     const body = await req.json();
     const { title, description, details, urlLink, featured, order } = body;
 
-    const docRef = projectsCollection.doc(params.id);
+    const docRef = projectsCollection.doc(id);
     const snap = await docRef.get();
     if (!snap.exists) {
       return NextResponse.json(
         { error: "Projeto não encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -52,7 +53,7 @@ export async function PUT(
     console.error("[PUT /api/projects/[id]]", error);
     return NextResponse.json(
       { error: "Erro ao atualizar projeto" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -60,7 +61,7 @@ export async function PUT(
 // DELETE /api/projects/[id] — remove projeto
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -68,13 +69,14 @@ export async function DELETE(
   }
 
   try {
-    await projectsCollection.doc(params.id).delete();
+    const { id } = await params;
+    await projectsCollection.doc(id).delete();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[DELETE /api/projects/[id]]", error);
     return NextResponse.json(
       { error: "Erro ao deletar projeto" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
