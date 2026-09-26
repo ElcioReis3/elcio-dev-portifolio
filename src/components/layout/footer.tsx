@@ -12,8 +12,8 @@ export function Footer() {
           </div>
           <span>
             © {year}{" "}
-            <strong className="text-foreground">Élcio Reis</strong> — Todos os
-            direitos reservados
+            <strong className="text-foreground">Élcio Serviços On</strong> —
+            Todos os direitos reservados
           </span>
         </div>
 
