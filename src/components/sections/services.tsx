@@ -35,9 +35,9 @@ const services = [
   },
 ];
 
-const WHATSAPP_NUMBER = "5599996452760";
-const getMsg = (service: string) =>
-  encodeURIComponent(`Olá, tenho interesse no serviço: ${service}`);
+// /whatsapp monta o link no servidor; o assunto vira a mensagem já digitada
+const waLink = (service: string) =>
+  `/whatsapp?assunto=${encodeURIComponent(`o serviço: ${service}`)}`;
 
 export function Services() {
   return (
@@ -110,7 +110,7 @@ export function Services() {
                     {service.price}
                   </span>
                   <a
-                    href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${getMsg(service.title)}`}
+                    href={waLink(service.title)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${

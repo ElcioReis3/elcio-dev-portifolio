@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     "Monte sua loja virtual com design profissional, pagamentos integrados e painel de gestão. Do zero ao online em poucos dias.",
 };
 
-const WHATSAPP_NUMBER = "5599996452760";
-const getMsg = (plan: string) =>
-  encodeURIComponent(`Olá, tenho interesse no plano: ${plan}`);
+// nada de telefone no HTML: /whatsapp redireciona no servidor
+const waLink = (plan: string) =>
+  `/whatsapp?assunto=${encodeURIComponent(`o plano: ${plan}`)}`;
 
 const features = [
   {
@@ -144,7 +144,7 @@ export default function SuaLojaOnlinePage() {
             Voltar ao portfólio
           </Link>
           <a
-            href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${getMsg("Loja Online")}`}
+            href={waLink("Loja Online")}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -172,7 +172,7 @@ export default function SuaLojaOnlinePage() {
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <a
-              href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${getMsg("Loja Online Pro")}`}
+              href={waLink("Loja Online Pro")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
@@ -340,7 +340,7 @@ export default function SuaLojaOnlinePage() {
                 </ul>
 
                 <a
-                  href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${getMsg(plan.name)}`}
+                  href={waLink(plan.name)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block text-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
@@ -368,7 +368,7 @@ export default function SuaLojaOnlinePage() {
             projeto. Sem compromisso.
           </p>
           <a
-            href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${getMsg("Loja Online")}`}
+            href={waLink("Loja Online")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-2xl text-lg font-semibold hover:bg-[#20bc5a] transition-all hover:shadow-lg hover:shadow-green-500/25"

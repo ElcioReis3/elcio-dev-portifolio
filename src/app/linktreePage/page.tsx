@@ -7,17 +7,14 @@ export const metadata: Metadata = {
   description: "Todos os links do desenvolvedor Élcio Reis em um só lugar.",
 };
 
-const WHATSAPP_NUMBER = "5599996452760";
-const WHATSAPP_MSG = encodeURIComponent(
-  "Olá, gostaria de saber mais sobre seus serviços."
-);
+// o número mora no .env e só o servidor monta o link, em /whatsapp
 
 const links = [
   {
     icon: MessageSquare,
     label: "WhatsApp — Fale comigo",
     sublabel: "Respondo rápido!",
-    href: `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${WHATSAPP_MSG}`,
+    href: "/whatsapp",
     accent: "#25D366",
     primary: true,
   },
@@ -119,7 +116,7 @@ export default function LinktreePage() {
             Quer uma página de links assim?
           </p>
           <a
-            href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent("Olá, quero uma página de links personalizada!")}`}
+            href={`/whatsapp?assunto=${encodeURIComponent("uma página de links personalizada")}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-400 hover:text-blue-300 transition-colors underline"

@@ -80,7 +80,7 @@ export function Navbar() {
 
           {/* CTA button desktop */}
           <a
-            href={`https://api.whatsapp.com/send?phone=${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5599996452760"}&text=${encodeURIComponent("Olá, gostaria de saber mais sobre seus serviços.")}`}
+            href="/whatsapp"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -116,7 +116,7 @@ export function Navbar() {
             ))}
             <li className="mt-2">
               <a
-                href={`https://api.whatsapp.com/send?phone=5599996452760&text=${encodeURIComponent("Olá, gostaria de saber mais sobre seus serviços.")}`}
+                href="/whatsapp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block px-4 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-medium text-center"
