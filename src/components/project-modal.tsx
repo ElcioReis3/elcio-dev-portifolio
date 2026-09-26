@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Maximize2,
+  X,
+} from "lucide-react";
 import type { Project } from "@/types/project";
 
 type Props = {
@@ -11,30 +17,34 @@ type Props = {
 };
 
 const TECH_ICONS: Record<string, string> = {
-  "React": "/images/icons/react-icon.png",
+  React: "/images/icons/react-icon.png",
   "Next.js": "/images/icons/nextjs-icon.png",
-  "TypeScript": "/images/icons/typescript-icons.png",
-  "Tailwind": "/images/icons/tailwindcss.icons.png",
-  "Shadcn": "/images/icons/shadcn-ui-icon.png",
-  "Git": "/images/icons/git-icon.png",
-  "HTML": "/images/icons/html-icons.png",
-  "CSS": "/images/icons/css-icons.png",
-  "JavaScript": "/images/icons/javascript-icons.png",
+  TypeScript: "/images/icons/typescript-icons.png",
+  Tailwind: "/images/icons/tailwindcss.icons.png",
+  Shadcn: "/images/icons/shadcn-ui-icon.png",
+  Git: "/images/icons/git-icon.png",
+  HTML: "/images/icons/html-icons.png",
+  CSS: "/images/icons/css-icons.png",
+  JavaScript: "/images/icons/javascript-icons.png",
 };
 
 export function ProjectModal({ project, onClose }: Props) {
   const [imgIndex, setImgIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (!project) return;
     setImgIndex(0);
 
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") setImgIndex((i) => (i + 1) % project.images.length);
-      if (e.key === "ArrowLeft")
-        setImgIndex((i) => (i - 1 + project.images.length) % project.images.length);
+    const total = project.images.length;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (!total) return;
+      if (event.key === "ArrowRight") setImgIndex((i) => (i + 1) % total);
+      if (event.key === "ArrowLeft")
+        setImgIndex((i) => (i - 1 + total) % total);
     };
+
     window.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -46,10 +56,16 @@ export function ProjectModal({ project, onClose }: Props) {
   if (!project) return null;
 
   const images = project.images;
+  const total = images.length;
+  const currentImage = images[imgIndex];
 
-  // Parse tech stack from description
-  const techKeywords = Object.keys(TECH_ICONS).filter((t) =>
-    project.description.toLowerCase().includes(t.toLowerCase())
+  const go = (delta: number) => {
+    if (!total) return;
+    setImgIndex((i) => (i + delta + total) % total);
+  };
+
+  const techKeywords = Object.keys(TECH_ICONS).filter((tech) =>
+    project.description.toLowerCase().includes(tech.toLowerCase()),
   );
 
   return (
@@ -58,98 +74,146 @@ export function ProjectModal({ project, onClose }: Props) {
       role="dialog"
       aria-modal="true"
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Close */}
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+          className="absolute right-4 top-4 z-20 rounded-lg bg-black/60 p-2 text-white transition-colors hover:bg-black/80"
           aria-label="Fechar"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
 
-        {/* Image carousel */}
-        <div className="relative h-56 sm:h-72 bg-secondary rounded-t-2xl overflow-hidden">
-          {images[imgIndex] ? (
-            <Image
-              src={images[imgIndex]}
-              alt={`${project.title} - imagem ${imgIndex + 1}`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 672px) 100vw, 672px"
-            />
+        {/* Carrossel — a imagem aparece inteira, sem cortes */}
+        <div
+          className="relative aspect-[16/10] w-full overflow-hidden rounded-t-2xl bg-black"
+          onTouchStart={(event) => {
+            touchStartX.current = event.touches[0].clientX;
+          }}
+          onTouchEnd={(event) => {
+            if (touchStartX.current === null) return;
+            const delta = event.changedTouches[0].clientX - touchStartX.current;
+            if (Math.abs(delta) > 50) go(delta < 0 ? 1 : -1);
+            touchStartX.current = null;
+          }}
+        >
+          {currentImage ? (
+            <>
+              {/* fundo desfocado só para preencher as laterais */}
+              <Image
+                src={currentImage}
+                alt=""
+                fill
+                aria-hidden
+                className="scale-110 object-cover opacity-40 blur-2xl"
+                sizes="672px"
+              />
+              <Image
+                src={currentImage}
+                alt={`${project.title} - imagem ${imgIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="(max-width: 672px) 100vw, 672px"
+                priority
+              />
+            </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+            <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
               Sem imagem
             </div>
           )}
 
-          {images.length > 1 && (
+          {total > 1 && (
             <>
               <button
-                onClick={() =>
-                  setImgIndex((i) => (i - 1 + images.length) % images.length)
-                }
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+                onClick={() => go(-1)}
+                aria-label="Imagem anterior"
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-lg bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button
-                onClick={() => setImgIndex((i) => (i + 1) % images.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+                onClick={() => go(1)}
+                aria-label="Próxima imagem"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="h-5 w-5" />
               </button>
 
-              {/* Dots */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setImgIndex(i)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${
-                      i === imgIndex ? "bg-white w-4" : "bg-white/50"
-                    }`}
-                  />
-                ))}
-              </div>
+              <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white">
+                {imgIndex + 1} / {total}
+              </span>
             </>
+          )}
+
+          {currentImage && (
+            <a
+              href={currentImage}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Abrir em tamanho real"
+              className="absolute bottom-3 right-3 rounded-lg bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </a>
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-5">
+        {/* Miniaturas */}
+        {total > 1 && (
+          <div className="flex gap-2 overflow-x-auto border-b border-border bg-secondary/40 p-3">
+            {images.map((image, index) => (
+              <button
+                key={`${image}-${index}`}
+                onClick={() => setImgIndex(index)}
+                aria-label={`Ver imagem ${index + 1}`}
+                className={`relative h-12 w-20 shrink-0 overflow-hidden rounded-lg border-2 bg-black transition-all ${
+                  index === imgIndex
+                    ? "border-primary"
+                    : "border-transparent opacity-60 hover:opacity-100"
+                }`}
+              >
+                <Image
+                  src={image}
+                  alt=""
+                  fill
+                  className="object-contain"
+                  sizes="80px"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Conteúdo */}
+        <div className="space-y-5 p-6">
           <div>
             <h2 className="text-xl font-bold leading-snug">{project.title}</h2>
-            <p className="text-sm text-muted-foreground mt-1.5">
+            <p className="mt-1.5 text-sm text-muted-foreground">
               {project.description}
             </p>
           </div>
 
           {project.details && (
-            <div className="p-4 bg-secondary rounded-xl">
+            <div className="rounded-xl bg-secondary p-4">
               <p className="text-sm leading-relaxed">{project.details}</p>
             </div>
           )}
 
-          {/* Tech stack */}
           {techKeywords.length > 0 && (
             <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Tecnologias
               </div>
               <div className="flex flex-wrap gap-2">
                 {techKeywords.map((tech) => (
                   <div
                     key={tech}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary rounded-full text-xs font-medium"
+                    className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
                   >
                     {TECH_ICONS[tech] && (
                       <Image
@@ -166,16 +230,15 @@ export function ProjectModal({ project, onClose }: Props) {
             </div>
           )}
 
-          {/* CTA */}
           {project.urlLink && (
             <a
               href={project.urlLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Visitar projeto
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="h-4 w-4" />
             </a>
           )}
         </div>
