@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import type { Project } from "@/types/project";
+import { ProjectBadge } from "@/components/project-badge";
 
 type Props = {
   project: Project | null;
@@ -192,6 +193,7 @@ export function ProjectModal({ project, onClose }: Props) {
         {/* Conteúdo */}
         <div className="space-y-5 p-6">
           <div>
+            <ProjectBadge project={project} className="mb-3" />
             <h2 className="text-xl font-bold leading-snug">{project.title}</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {project.description}
@@ -230,16 +232,41 @@ export function ProjectModal({ project, onClose }: Props) {
             </div>
           )}
 
-          {project.urlLink && (
-            <a
-              href={project.urlLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Visitar projeto
-              <ExternalLink className="h-4 w-4" />
-            </a>
+          {(project.urlLink || project.appLink) && (
+            <div className="flex flex-wrap gap-3">
+              {project.urlLink && (
+                <a
+                  href={project.urlLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  {project.kind === "both" ? "Visitar site" : "Visitar projeto"}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
+              {project.appLink && (
+                <a
+                  href={project.appLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+                    project.urlLink
+                      ? "border border-border hover:bg-secondary"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  }`}
+                >
+                  <Image
+                    src="/images/icons/playstore.png"
+                    width={16}
+                    height={16}
+                    alt=""
+                    aria-hidden
+                  />
+                  Ver na Play Store
+                </a>
+              )}
+            </div>
           )}
         </div>
       </div>

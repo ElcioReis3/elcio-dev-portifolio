@@ -3,19 +3,16 @@ import { projectsCollection } from "@/lib/firebase";
 import { deleteRemovedImages } from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
-function serialize(id: string, data: FirebaseFirestore.DocumentData) {
-  return {
-    id,
-    title: data.title ?? "",
-    description: data.description ?? "",
-    details: data.details ?? "",
-    images: Array.isArray(data.images) ? (data.images as string[]) : [],
-    urlLink: data.urlLink ?? null,
-    featured: data.featured ?? false,
-    order: data.order ?? 0,
-  };
-}
+import {
+  DEFAULT_APP_STATUS,
+  DEFAULT_WEB_STATUS,
+  hasApp,
+  hasWeb,
+  normalizeKind,
+  parseAppStatus,
+  parseWebStatus,
+  serializeProject,
+} from "@/lib/project-badge";
 
 // PUT /api/projects/[id] — atualiza projeto (inclui a lista/ordem de imagens)
 export async function PUT(
@@ -30,8 +27,19 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { title, description, details, urlLink, featured, order, images } =
-      body;
+    const {
+      title,
+      description,
+      details,
+      urlLink,
+      featured,
+      order,
+      images,
+      kind,
+      appLink,
+      webStatus,
+      appStatus,
+    } = body;
 
     const docRef = projectsCollection.doc(id);
     const snap = await docRef.get();
@@ -49,6 +57,51 @@ export async function PUT(
     if (urlLink !== undefined) updates.urlLink = urlLink;
     if (featured !== undefined) updates.featured = featured;
     if (order !== undefined) updates.order = order;
+
+    if (appLink !== undefined) updates.appLink = appLink;
+
+    // tipo + status dos badges (web e app têm status próprios)
+    if (
+      kind !== undefined ||
+      webStatus !== undefined ||
+      appStatus !== undefined
+    ) {
+      const current = serializeProject(id, snap.data()!);
+      const nextKind = normalizeKind(kind ?? current.kind);
+      if (kind !== undefined) updates.kind = nextKind;
+
+      if (webStatus === null) {
+        // plataforma removida do projeto: limpa o status
+        updates.webStatus = null;
+      } else if (webStatus !== undefined) {
+        const parsed = parseWebStatus(webStatus);
+        if (!parsed) {
+          return NextResponse.json(
+            { error: "`webStatus` inválido" },
+            { status: 400 },
+          );
+        }
+        updates.webStatus = parsed;
+      } else if (hasWeb(nextKind) && !current.webStatus) {
+        updates.webStatus = DEFAULT_WEB_STATUS;
+      }
+
+      if (appStatus === null) {
+        // plataforma removida do projeto: limpa o status
+        updates.appStatus = null;
+      } else if (appStatus !== undefined) {
+        const parsed = parseAppStatus(appStatus);
+        if (!parsed) {
+          return NextResponse.json(
+            { error: "`appStatus` inválido" },
+            { status: 400 },
+          );
+        }
+        updates.appStatus = parsed;
+      } else if (hasApp(nextKind) && !current.appStatus) {
+        updates.appStatus = DEFAULT_APP_STATUS;
+      }
+    }
 
     const previousImages: string[] = Array.isArray(snap.data()?.images)
       ? (snap.data()!.images as string[])
@@ -78,7 +131,7 @@ export async function PUT(
     }
 
     const updated = await docRef.get();
-    return NextResponse.json(serialize(updated.id, updated.data()!));
+    return NextResponse.json(serializeProject(updated.id, updated.data()!));
   } catch (error) {
     console.error("[PUT /api/projects/[id]]", error);
     return NextResponse.json(

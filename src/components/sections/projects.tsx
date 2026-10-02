@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ExternalLink, Loader2, Code2 } from "lucide-react";
 import type { Project } from "@/types/project";
 import { ProjectModal } from "@/components/project-modal";
+import { ProjectBadge } from "@/components/project-badge";
 
 async function fetchProjects(): Promise<Project[]> {
   const res = await fetch("/api/projects", { cache: "no-store" });
@@ -102,6 +103,11 @@ function ProjectCard({
             Destaque
           </div>
         )}
+        <ProjectBadge
+          project={project}
+          variant="overlay"
+          className="absolute bottom-3 left-3"
+        />
       </div>
 
       {/* Content */}

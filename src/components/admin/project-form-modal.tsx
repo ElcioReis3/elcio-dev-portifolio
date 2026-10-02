@@ -2,7 +2,24 @@
 
 import { useRef, useState } from "react";
 import { ImageIcon, Info, Loader2, X } from "lucide-react";
-import type { Project } from "@/types/project";
+import type {
+  AppStatus,
+  Project,
+  ProjectKind,
+  WebStatus,
+} from "@/types/project";
+import {
+  APP_STATUS,
+  DEFAULT_APP_STATUS,
+  DEFAULT_WEB_STATUS,
+  PROJECT_KINDS,
+  WEB_STATUS,
+  hasApp,
+  hasWeb,
+  parseAppStatus,
+  parseWebStatus,
+} from "@/lib/project-badge";
+import { ProjectBadge } from "@/components/project-badge";
 import { ImageManager } from "@/components/admin/image-manager";
 import { Field, ModalBackdrop, inputClass } from "@/components/admin/ui";
 
@@ -24,6 +41,15 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const [description, setDescription] = useState(project?.description ?? "");
   const [details, setDetails] = useState(project?.details ?? "");
   const [urlLink, setUrlLink] = useState(project?.urlLink ?? "");
+  const [appLink, setAppLink] = useState(project?.appLink ?? "");
+  const [kind, setKind] = useState<ProjectKind>(project?.kind ?? "site");
+  const [webStatus, setWebStatus] = useState<WebStatus | "none">(
+    // projetos antigos sem status: site com link já aparece como "Disponível no link"
+    parseWebStatus(project?.webStatus) ?? DEFAULT_WEB_STATUS,
+  );
+  const [appStatus, setAppStatus] = useState<AppStatus | "none">(
+    parseAppStatus(project?.appStatus) ?? DEFAULT_APP_STATUS,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -45,7 +71,12 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
             title,
             description,
             details,
-            urlLink: urlLink || null,
+            // só mantém link/status das plataformas que o projeto tem
+            urlLink: hasWeb(kind) ? urlLink || null : null,
+            appLink: hasApp(kind) ? appLink || null : null,
+            kind,
+            webStatus: hasWeb(kind) ? webStatus : null,
+            appStatus: hasApp(kind) ? appStatus : null,
           }),
         });
         if (!res.ok) throw new Error();
@@ -58,7 +89,15 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
         formData.append("title", title);
         formData.append("description", description);
         formData.append("details", details);
-        if (urlLink) formData.append("urlLink", urlLink);
+        formData.append("kind", kind);
+        if (hasWeb(kind)) {
+          if (urlLink) formData.append("urlLink", urlLink);
+          formData.append("webStatus", webStatus);
+        }
+        if (hasApp(kind)) {
+          if (appLink) formData.append("appLink", appLink);
+          formData.append("appStatus", appStatus);
+        }
         if (fileRef.current?.files) {
           Array.from(fileRef.current.files).forEach((file) =>
             formData.append("images", file),
@@ -158,15 +197,106 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
                 />
               </Field>
 
-              <Field label="URL do projeto">
-                <input
-                  value={urlLink ?? ""}
-                  onChange={(event) => setUrlLink(event.target.value)}
-                  placeholder="https://..."
-                  type="url"
-                  className={inputClass}
-                />
+              <Field
+                label="Tipo do projeto"
+                hint="Use “Site + App” quando existir versão web e versão app."
+              >
+                <div className="grid grid-cols-3 gap-2">
+                  {PROJECT_KINDS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setKind(option.value)}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                        kind === option.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:bg-secondary"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </Field>
+
+              {hasWeb(kind) && (
+                <div className="space-y-4 rounded-xl border border-border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Versão web
+                  </p>
+                  <Field label="Badge da versão web">
+                    <select
+                      value={webStatus}
+                      onChange={(event) =>
+                        setWebStatus(event.target.value as WebStatus | "none")
+                      }
+                      className={inputClass}
+                    >
+                      {(Object.keys(WEB_STATUS) as WebStatus[]).map((option) => (
+                        <option key={option} value={option}>
+                          {WEB_STATUS[option].label}
+                        </option>
+                      ))}
+                      <option value="none">Sem badge</option>
+                    </select>
+                  </Field>
+                  <Field label="URL do site">
+                    <input
+                      value={urlLink ?? ""}
+                      onChange={(event) => setUrlLink(event.target.value)}
+                      placeholder="https://..."
+                      type="url"
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              )}
+
+              {hasApp(kind) && (
+                <div className="space-y-4 rounded-xl border border-border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Versão app
+                  </p>
+                  <Field label="Badge da versão app">
+                    <select
+                      value={appStatus}
+                      onChange={(event) =>
+                        setAppStatus(event.target.value as AppStatus | "none")
+                      }
+                      className={inputClass}
+                    >
+                      {(Object.keys(APP_STATUS) as AppStatus[]).map((option) => (
+                        <option key={option} value={option}>
+                          {APP_STATUS[option].label}
+                        </option>
+                      ))}
+                      <option value="none">Sem badge</option>
+                    </select>
+                  </Field>
+                  <Field
+                    label="Link da Play Store"
+                    hint="Opcional. Deixe vazio enquanto o app não estiver publicado."
+                  >
+                    <input
+                      value={appLink ?? ""}
+                      onChange={(event) => setAppLink(event.target.value)}
+                      placeholder="https://play.google.com/store/apps/details?id=..."
+                      type="url"
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              )}
+
+              <ProjectBadge
+                project={{
+                  kind,
+                  urlLink,
+                  appLink,
+                  webStatus,
+                  appStatus,
+                }}
+              />
 
               {!isEdit && (
                 <Field

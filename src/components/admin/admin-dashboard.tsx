@@ -16,6 +16,7 @@ import {
   Pencil,
   Plus,
   Save,
+  Smartphone,
   Star,
   StarOff,
   Trash2,
@@ -24,6 +25,7 @@ import {
 import type { Project } from "@/types/project";
 import { thumbUrl } from "@/lib/cloudinary-url";
 import { ProjectModal } from "@/components/project-modal";
+import { ProjectBadge } from "@/components/project-badge";
 import { ProjectFormModal } from "@/components/admin/project-form-modal";
 import { ModalBackdrop } from "@/components/admin/ui";
 
@@ -262,6 +264,7 @@ export function AdminDashboard({ projects: initialProjects }: Props) {
                       <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                         {project.description}
                       </p>
+                      <ProjectBadge project={project} className="mt-2" />
                     </div>
 
                     {/* Ordem */}
@@ -320,9 +323,20 @@ export function AdminDashboard({ projects: initialProjects }: Props) {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                          title="Abrir projeto"
+                          title="Abrir site"
                         >
                           <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                      {project.appLink && (
+                        <a
+                          href={project.appLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          title="Abrir na Play Store"
+                        >
+                          <Smartphone className="h-4 w-4" />
                         </a>
                       )}
 

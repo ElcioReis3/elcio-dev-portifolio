@@ -3,25 +3,25 @@ import { projectsCollection } from "@/lib/firebase";
 import { uploadImage } from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import {
+  DEFAULT_APP_STATUS,
+  DEFAULT_WEB_STATUS,
+  hasApp,
+  hasWeb,
+  normalizeKind,
+  parseAppStatus,
+  parseWebStatus,
+  serializeProject,
+} from "@/lib/project-badge";
 
 // GET /api/projects — lista todos os projetos (público)
 export async function GET() {
   try {
     const snapshot = await projectsCollection.orderBy("order", "asc").get();
 
-    const projects = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        title: data.title ?? "",
-        description: data.description ?? "",
-        details: data.details ?? "",
-        images: Array.isArray(data.images) ? data.images : [],
-        urlLink: data.urlLink ?? null,
-        featured: data.featured ?? false,
-        order: data.order ?? 0,
-      };
-    });
+    const projects = snapshot.docs.map((doc) =>
+      serializeProject(doc.id, doc.data()),
+    );
 
     return NextResponse.json(projects);
   } catch (error) {
@@ -45,7 +45,16 @@ export async function POST(req: NextRequest) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const details = formData.get("details") as string;
-    const urlLink = formData.get("urlLink") as string | null;
+    const kind = normalizeKind(formData.get("kind"));
+    // só guarda link/status das plataformas que o projeto realmente tem
+    const urlLink = hasWeb(kind) ? (formData.get("urlLink") as string) : null;
+    const appLink = hasApp(kind) ? (formData.get("appLink") as string) : null;
+    const webStatus = hasWeb(kind)
+      ? (parseWebStatus(formData.get("webStatus")) ?? DEFAULT_WEB_STATUS)
+      : null;
+    const appStatus = hasApp(kind)
+      ? (parseAppStatus(formData.get("appStatus")) ?? DEFAULT_APP_STATUS)
+      : null;
     const imageFiles = formData.getAll("images") as File[];
 
     if (!title || !description || !details) {
@@ -78,6 +87,10 @@ export async function POST(req: NextRequest) {
       description,
       details,
       urlLink: urlLink || null,
+      appLink: appLink || null,
+      kind,
+      webStatus,
+      appStatus,
       images: imageUrls,
       featured: false,
       order: lastOrder + 1,
